@@ -1,17 +1,35 @@
 FROM alpine:latest
 
 RUN apk add --no-cache \
+    python3 \
     postgresql-client \
     ca-certificates \
-    curl \
-    netcat-openbsd
+    curl
 
-# Mock HTTP API server that listens on port 3000
+# Mock HTTP API server using Python's http.server
 RUN cat > /usr/local/bin/vpn-api << 'EOF'
-#!/bin/sh
-while true; do
-  (printf 'HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 16\r\n\r\n{"status":"ok"}') | nc -l -p 3000 || true
-done
+#!/usr/bin/env python3
+import http.server
+import json
+import sys
+
+class APIHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/health' or self.path == '/':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok"}).encode())
+        else:
+            self.send_response(404)
+            self.end_headers()
+    
+    def log_message(self, format, *args):
+        print(f"[API] {format % args}", file=sys.stderr)
+
+server = http.server.HTTPServer(('0.0.0.0', 3000), APIHandler)
+print("Mock API server running on port 3000...", file=sys.stderr)
+server.serve_forever()
 EOF
 RUN chmod +x /usr/local/bin/vpn-api
 
