@@ -7,7 +7,7 @@ set -e
 
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 REPORT_FILE="SMOKE_TEST_REPORT_$(date +%s).md"
-API_URL="${API_URL:-http://localhost:8080}"
+API_URL="${API_URL:-http://localhost:3000}"
 PASS_COUNT=0
 FAIL_COUNT=0
 

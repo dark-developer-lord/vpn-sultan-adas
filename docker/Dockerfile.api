@@ -12,14 +12,50 @@ RUN cat > /usr/local/bin/vpn-api << 'EOF'
 import http.server
 import json
 import sys
+import base64
 
 class APIHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == '/health' or self.path == '/':
+        # Health endpoints
+        if self.path == '/health':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({"status": "ok"}).encode())
+        elif self.path == '/api/health/db':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok", "service": "database"}).encode())
+        elif self.path == '/api/health/redis':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok", "service": "redis"}).encode())
+        elif self.path == '/api/vpn/servers':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps([
+                {"id": 1, "name": "USA-1", "country": "US", "ip": "1.2.3.4"},
+                {"id": 2, "name": "EU-1", "country": "DE", "ip": "5.6.7.8"}
+            ]).encode())
+        elif self.path == '/':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok"}).encode())
+        else:
+            self.send_response(404)
+            self.end_headers()
+    
+    def do_POST(self):
+        # Authentication endpoint
+        if self.path == '/api/auth/login':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"token": "mock-jwt-token-" + base64.b64encode(b"test").decode()}).encode())
         else:
             self.send_response(404)
             self.end_headers()
