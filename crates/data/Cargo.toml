@@ -1,0 +1,12 @@
+[package]
+name = "vpn-data"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vpn-shared = { path = "../shared" }
+sqlx.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+serde_json.workspace = true

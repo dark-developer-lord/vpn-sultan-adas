@@ -1,0 +1,35 @@
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+!.env.example
+
+# Node/Frontend
+node_modules/
+dist/
+*.tsbuildinfo
+.angular/
+
+# Logs
+logs/
+*.log
+
+# Docker
+.dockerignore
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db

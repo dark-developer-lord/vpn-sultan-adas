@@ -1,0 +1,25 @@
+FROM rust:1.75-alpine AS builder
+
+RUN apk add --no-cache \
+    musl-dev \
+    postgresql-client \
+    pkgconfig \
+    openssl-dev
+
+WORKDIR /app
+
+COPY . .
+
+RUN cargo build --release --bin vpn-api
+
+FROM alpine:latest
+
+RUN apk add --no-cache \
+    postgresql-client \
+    ca-certificates
+
+COPY --from=builder /app/target/release/vpn-api /usr/local/bin/
+
+EXPOSE 3000
+
+CMD ["vpn-api"]

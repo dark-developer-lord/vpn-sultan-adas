@@ -1,0 +1,23 @@
+FROM rust:1.75-alpine AS builder
+
+RUN apk add --no-cache \
+    musl-dev \
+    pkgconfig \
+    openssl-dev
+
+WORKDIR /app
+
+COPY . .
+
+RUN cargo build --release --bin vpn-agent
+
+FROM alpine:latest
+
+RUN apk add --no-cache \
+    ca-certificates
+
+COPY --from=builder /app/target/release/vpn-agent /usr/local/bin/
+
+EXPOSE 9999
+
+CMD ["vpn-agent"]

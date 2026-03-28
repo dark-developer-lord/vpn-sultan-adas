@@ -1,0 +1,15 @@
+[package]
+name = "vpn-domain"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vpn-shared = { path = "../shared" }
+vpn-data = { path = "../data" }
+vpn-crypto = { path = "../crypto" }
+sqlx.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+jsonwebtoken.workspace = true
+argon2.workspace = true
+rand.workspace = true

@@ -1,0 +1,285 @@
+# Alert Rules for VPN Service
+
+groups:
+  - name: vpn-service-alerts
+    interval: 30s
+    rules:
+      # ==================== APPLICATION ALERTS ====================
+      
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
+          
+      - alert: SlowResponseTime
+        expr: histogram_quantile(0.95, http_request_duration_seconds) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Slow API response times"
+          description: "P95 response time is {{ $value | humanizeDuration }}"
+
+      - alert: HighMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value | humanizePercentage }}"
+
+      # ==================== DATABASE ALERTS ====================
+
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database has been unavailable for more than 1 minute"
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: pg_stat_activity_count / pg_settings_max_connections > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "{{ $value | humanizePercentage }} of connections are in use"
+
+      - alert: DatabaseSlowQueries
+        expr: pg_stat_statements_mean_exec_time > 5000
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query execution time is {{ $value | humanizeDuration }}"
+
+      - alert: ReplicationLag
+        expr: pg_replication_lag_seconds > 30
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database replication lag detected"
+          description: "Replication lag is {{ $value | humanizeDuration }}"
+
+      # ==================== CACHE ALERTS ====================
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache has been unavailable for more than 1 minute"
+
+      - alert: RedisCacheLow
+        expr: redis_connected_clients / redis_max_clients > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis client connections high"
+          description: "{{ $value | humanizePercentage }} of Redis connections are in use"
+
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis memory usage high"
+          description: "Redis memory usage is {{ $value | humanizePercentage }}"
+
+      # ==================== VPN CONNECTION ALERTS ====================
+
+      - alert: HighVPNConnectionFailureRate
+        expr: rate(vpn_connection_failures_total[5m]) / rate(vpn_connection_attempts_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: vpn
+        annotations:
+          summary: "High VPN connection failure rate"
+          description: "Connection failure rate is {{ $value | humanizePercentage }}"
+
+      - alert: VPNConnectivityIssue
+        expr: vpn_active_connections < 10 and vpn_active_connections_total > 1000
+        for: 5m
+        labels:
+          severity: critical
+          component: vpn
+        annotations:
+          summary: "VPN connectivity issue detected"
+          description: "Only {{ $value }} active VPN connections (expected > 10)"
+
+      - alert: ExcessiveVPNDataTransfer
+        expr: rate(vpn_data_transferred_bytes_total[1h]) > 1073741824  # 1GB/hour
+        for: 10m
+        labels:
+          severity: warning
+          component: vpn
+        annotations:
+          summary: "Excessive VPN data transfer"
+          description: "Data transfer rate is {{ $value | humanize }}B/s"
+
+      # ==================== AVAILABILITY ALERTS ====================
+
+      - alert: ServiceDown
+        expr: up{job="vpn-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "API service is down"
+          description: "VPN backend API has been unavailable for more than 1 minute"
+
+      - alert: HighUptimeAlertFatigue
+        expr: increase(up{job="vpn-backend"}[1h]) < 3600
+        for: 30m
+        labels:
+          severity: warning
+          component: monitoring
+        annotations:
+          summary: "Service uptime degradation"
+          description: "Service has had {{ $value }} up checks in the last hour (expected 3600)"
+
+      # ==================== STORAGE ALERTS ====================
+
+      - alert: DiskSpaceLow
+        expr: node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Low disk space detected"
+          description: "Disk {{ $labels.device }} is {{ $value | humanizePercentage }} full"
+
+      - alert: DiskSpaceCritical
+        expr: node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.05
+        for: 2m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Critical disk space shortage"
+          description: "Disk {{ $labels.device }} is {{ $value | humanizePercentage }} full"
+
+      # ==================== AUTHENTICATION ALERTS ====================
+
+      - alert: UnusualAuthenticationFailures
+        expr: rate(auth_failures_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Unusual authentication failures"
+          description: "Authentication failure rate is {{ $value }} requests/sec"
+
+      - alert: BruteForceAttempt
+        expr: rate(auth_failures_total{reason="invalid_credentials"}[1m]) > 100
+        for: 1m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "Potential brute force attack detected"
+          description: "{{ $value }} failed login attempts per second detected"
+
+      # ==================== BILLING ALERTS ====================
+
+      - alert: StripeAPIErrors
+        expr: rate(stripe_api_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: billing
+        annotations:
+          summary: "Stripe API errors detected"
+          description: "Stripe error rate is {{ $value | humanizePercentage }}"
+
+      - alert: PaymentProcessingBacklog
+        expr: payment_queue_length > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: billing
+        annotations:
+          summary: "Payment processing backlog"
+          description: "{{ $value }} payments pending processing"
+
+      # ==================== INFRASTRUCTURE ALERTS ====================
+
+      - alert: NginxHighConnections
+        expr: nginx_connections_active > 5000
+        for: 5m
+        labels:
+          severity: warning
+          component: load-balancer
+        annotations:
+          summary: "Nginx has high active connections"
+          description: "{{ $value }} active connections"
+
+      - alert: NetworkBandwidthHigh
+        expr: rate(node_network_transmit_bytes_total[5m]) > 100000000  # 100MB/s
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High network bandwidth usage"
+          description: "Bandwidth usage is {{ $value | humanize }}B/s"
+
+      # ==================== DATA QUALITY ALERTS ====================
+
+      - alert: AuditLogNotWriting
+        expr: increase(audit_log_entries_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+          component: observability
+        annotations:
+          summary: "Audit logs not being written"
+          description: "No audit log entries in the last 5 minutes"
+
+      - alert: MetricsCollectionDown
+        expr: up{job="prometheus"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: observability
+        annotations:
+          summary: "Prometheus is down"
+          description: "Metrics collection has stopped"

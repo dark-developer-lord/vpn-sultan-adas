@@ -1,0 +1,15 @@
+[package]
+name = "vpn-shared"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+sqlx = { workspace = true, optional = true }
+
+[features]
+default = ["sqlx-postgres"]
+sqlx-postgres = ["dep:sqlx"]

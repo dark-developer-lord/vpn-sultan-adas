@@ -1,0 +1,339 @@
+<div class="admin-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="loadDashboardStats()">Refresh</button>
+      <button class="btn btn-secondary" (click)="exportRevenue()">Export Data</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">Overview</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'users'" (click)="activeTab = 'users'">Users</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'revenue'" (click)="activeTab = 'revenue'">Revenue</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'system'" (click)="activeTab = 'system'">System</a>
+    </li>
+  </ul>
+
+  <!-- OVERVIEW TAB -->
+  <div *ngIf="activeTab === 'overview'">
+    <!-- Stats Cards -->
+    <div class="row mb-4" *ngIf="stats">
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <h5 class="card-title">Total Users</h5>
+            <h2 class="stat-value">{{ stats.totalUsers | number }}</h2>
+            <p class="text-muted">{{ stats.activeUsers | number }} active</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <h5 class="card-title">Monthly Revenue</h5>
+            <h2 class="stat-value">{{ formatCurrency(stats.monthlyRevenue) }}</h2>
+            <p class="text-muted">Total: {{ formatCurrency(stats.totalRevenue) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <h5 class="card-title">Subscriptions</h5>
+            <h2 class="stat-value">{{ stats.paidSubscriptions | number }}</h2>
+            <p class="text-muted">{{ stats.freeSubscriptions | number }} free</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <h5 class="card-title">System Uptime</h5>
+            <h2 class="stat-value">{{ stats.systemHealth.uptime.toFixed(2) }}%</h2>
+            <p class="text-muted">Avg response: {{ stats.systemHealth.avgResponseTime }}ms</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="row mb-4" *ngIf="stats">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">System Status</div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4">
+                <p>API Status: <span [class]="'badge ' + getStatusBadgeClass(stats.systemHealth.apiStatus)">{{ stats.systemHealth.apiStatus }}</span></p>
+              </div>
+              <div class="col-md-4">
+                <p>Database Status: <span [class]="'badge ' + getStatusBadgeClass(stats.systemHealth.dbStatus)">{{ stats.systemHealth.dbStatus }}</span></p>
+              </div>
+              <div class="col-md-4">
+                <p>Redis Status: <span [class]="'badge ' + getStatusBadgeClass(stats.systemHealth.redisStatus)">{{ stats.systemHealth.redisStatus }}</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Countries -->
+    <div class="row" *ngIf="stats">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">Top Countries</div>
+          <div class="card-body">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Country</th>
+                  <th>Users</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let country of stats.topCountries">
+                  <td>{{ country.country }}</td>
+                  <td>{{ country.count }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">Plan Distribution</div>
+          <div class="card-body">
+            <div *ngIf="planDistributionChartData">
+              <!-- Doughnut chart would be rendered here -->
+              <p>Free Plans: {{ stats.freeSubscriptions }}</p>
+              <p>Paid Plans: {{ stats.paidSubscriptions }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS TAB -->
+  <div *ngIf="activeTab === 'users'">
+    <!-- Search & Filters -->
+    <div class="card mb-4">
+      <div class="card-header">Filters</div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Search by email or name"
+                   (keyup)="onSearchChange($any($event.target).value)">
+          </div>
+          <div class="col-md-4">
+            <select class="form-control" [(ngModel)]="selectedPlan" (change)="onFilterChange()">
+              <option value="all">All Plans</option>
+              <option value="free">Free</option>
+              <option value="basic">Basic</option>
+              <option value="pro">Pro</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select class="form-control" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary mt-3" (click)="exportUsers()">Export Users</button>
+      </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+      <div class="card-header">Users</div>
+      <div class="card-body">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Name</th>
+              <th>Plan</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of users">
+              <td>{{ user.email }}</td>
+              <td>{{ user.name }}</td>
+              <td><span [class]="'badge ' + getPlanBadgeClass(user.plan)">{{ user.plan }}</span></td>
+              <td><span [class]="'badge ' + getStatusBadgeClass(user.status)">{{ user.status }}</span></td>
+              <td>{{ formatDate(user.joinedDate) }}</td>
+              <td>{{ formatDate(user.lastLogin) }}</td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-warning" *ngIf="user.status !== 'suspended'"
+                          (click)="suspendUser(user.id)" title="Suspend">Suspend</button>
+                  <button class="btn btn-success" *ngIf="user.status === 'suspended'"
+                          (click)="unsuspendUser(user.id)" title="Unsuspend">Unsuspend</button>
+                  <button class="btn btn-info" (click)="refundUser(user.id)" title="Refund">Refund</button>
+                  <button class="btn btn-danger" (click)="deleteUser(user.id)" title="Delete">Delete</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="!users || users.length === 0">
+              <td colspan="7" class="text-center text-muted">No users found</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <button class="btn btn-sm btn-secondary" (click)="prevPage()" [disabled]="userPage === 1">
+            Previous
+          </button>
+          <span>Page {{ userPage }} ({{ users.length }} items)</span>
+          <button class="btn btn-sm btn-secondary" (click)="nextPage()" [disabled]="users.length < userPageSize">
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVENUE TAB -->
+  <div *ngIf="activeTab === 'revenue'">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">Revenue Over Time</div>
+          <div class="card-body">
+            <div *ngIf="revenueChartData">
+              <!-- Line chart would be rendered here -->
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Revenue</th>
+                    <th>Subscriptions</th>
+                    <th>One-time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let data of revenueData">
+                    <td>{{ data.date }}</td>
+                    <td>{{ formatCurrency(data.amount) }}</td>
+                    <td>{{ formatCurrency(data.subscriptions) }}</td>
+                    <td>{{ formatCurrency(data.oneTimePayments) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SYSTEM TAB -->
+  <div *ngIf="activeTab === 'system'">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">Audit Logs</div>
+          <div class="card-body">
+            <table class="table table-sm table-striped">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Resource</th>
+                  <th>Details</th>
+                  <th>IP Address</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let log of auditLogs">
+                  <td>{{ formatDate(log.timestamp) }}</td>
+                  <td>{{ log.userId }}</td>
+                  <td><span class="badge badge-info">{{ log.action }}</span></td>
+                  <td>{{ log.resource }}</td>
+                  <td>{{ log.details }}</td>
+                  <td>{{ log.ipAddress }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .admin-dashboard {
+    padding: 20px;
+  }
+
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+
+  .stat-card {
+    border-left: 4px solid #007bff;
+  }
+
+  .stat-value {
+    color: #007bff;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+
+  .badge {
+    font-size: 0.875rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .badge-success {
+    background-color: #28a745;
+  }
+
+  .badge-warning {
+    background-color: #ffc107;
+    color: #000;
+  }
+
+  .badge-danger {
+    background-color: #dc3545;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: #f5f5f5;
+  }
+
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+</style>
