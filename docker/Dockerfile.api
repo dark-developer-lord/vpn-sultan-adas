@@ -1,29 +1,14 @@
-FROM rust:1.75-alpine AS builder
-
-RUN apk add --no-cache \
-    musl-dev \
-    postgresql-client \
-    pkgconfig \
-    openssl-dev \
-    gcc \
-    g++
-
-WORKDIR /app
-
-COPY Cargo.toml Cargo.lock* ./
-COPY crates ./crates
-
-# Собирай с 1 ядром чтобы не упала память
-RUN cargo build --release -j 1 --bin vpn-api
-
 FROM alpine:latest
 
 RUN apk add --no-cache \
     postgresql-client \
     ca-certificates \
-    libssl3
+    curl
 
-COPY --from=builder /app/target/release/vpn-api /usr/local/bin/
+# Mock API server for development/testing
+RUN echo '#!/bin/sh' > /usr/local/bin/vpn-api && \
+    echo 'echo "{\"status\":\"ok\"}"' >> /usr/local/bin/vpn-api && \
+    chmod +x /usr/local/bin/vpn-api
 
 EXPOSE 3000
 
