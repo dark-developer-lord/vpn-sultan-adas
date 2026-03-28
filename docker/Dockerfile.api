@@ -3,12 +3,17 @@ FROM alpine:latest
 RUN apk add --no-cache \
     postgresql-client \
     ca-certificates \
-    curl
+    curl \
+    netcat-openbsd
 
-# Mock API server for development/testing
-RUN echo '#!/bin/sh' > /usr/local/bin/vpn-api && \
-    echo 'echo "{\"status\":\"ok\"}"' >> /usr/local/bin/vpn-api && \
-    chmod +x /usr/local/bin/vpn-api
+# Mock HTTP API server that listens on port 3000
+RUN cat > /usr/local/bin/vpn-api << 'EOF'
+#!/bin/sh
+while true; do
+  (printf 'HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 16\r\n\r\n{"status":"ok"}') | nc -l -p 3000 || true
+done
+EOF
+RUN chmod +x /usr/local/bin/vpn-api
 
 EXPOSE 3000
 
