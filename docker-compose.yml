@@ -38,15 +38,11 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://vpn:vpn@postgres:5432/vpn_service
-      RUST_LOG: info
       JWT_SECRET: dev-secret-key-change-in-production
       MASTER_KEY: dev-master-key-00000000000000000000000
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - .:/app
-    command: cargo run --bin vpn-api --release
 
 volumes:
   postgres_data:
