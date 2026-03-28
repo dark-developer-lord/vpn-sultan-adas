@@ -4,19 +4,24 @@ RUN apk add --no-cache \
     musl-dev \
     postgresql-client \
     pkgconfig \
-    openssl-dev
+    openssl-dev \
+    gcc \
+    g++
 
 WORKDIR /app
 
-COPY . .
+COPY Cargo.toml Cargo.lock* ./
+COPY crates ./crates
 
-RUN cargo build --release --bin vpn-api
+# Собирай с 1 ядром чтобы не упала память
+RUN cargo build --release -j 1 --bin vpn-api
 
 FROM alpine:latest
 
 RUN apk add --no-cache \
     postgresql-client \
-    ca-certificates
+    ca-certificates \
+    libssl3
 
 COPY --from=builder /app/target/release/vpn-api /usr/local/bin/
 
