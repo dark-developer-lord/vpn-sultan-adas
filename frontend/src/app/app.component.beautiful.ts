@@ -1,12 +1,11 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '@app/core/services/auth.service';
 
 @Component({
@@ -19,12 +18,11 @@ import { AuthService } from '@app/core/services/auth.service';
     MatSidenavModule,
     MatListModule,
     MatIconModule,
-    MatButtonModule,
-    MatDividerModule
+    MatButtonModule
   ],
   template: `
     <mat-toolbar color="primary" class="main-toolbar">
-      <button mat-icon-button (click)="toggleSidenav()" class="menu-button">
+      <button mat-icon-button (click)="sidenav.toggle()" class="menu-button">
         <mat-icon>menu</mat-icon>
       </button>
       <span class="toolbar-title">🔐 VPN Sultan Adas</span>
@@ -121,18 +119,11 @@ import { AuthService } from '@app/core/services/auth.service';
 export class AppComponent implements OnInit {
   title = 'VPN Dashboard';
   isLoggedIn = false;
-  @ViewChild('sidenav') sidenav!: MatSidenav;
 
   constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit() {
     this.isLoggedIn = this.authService.isAuthenticated();
-  }
-
-  toggleSidenav() {
-    if (this.sidenav) {
-      this.sidenav.toggle();
-    }
   }
 
   logout() {

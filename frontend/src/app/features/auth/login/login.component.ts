@@ -1,47 +1,76 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '@app/core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule,
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule
+  ],
   template: `
     <div class="login-container">
-      <div class="login-box">
-        <h1>VPN Dashboard</h1>
-        <form (ngSubmit)="onSubmit()">
-          <div class="form-group">
-            <label>Email:</label>
-            <input 
-              type="email" 
-              [(ngModel)]="email" 
-              name="email"
-              required
-              placeholder="user@example.com"
-            />
+      <mat-card class="login-card">
+        <mat-card-header class="card-header">
+          <h1>🔐 VPN Dashboard</h1>
+          <p>Secure Cloud VPN Management</p>
+        </mat-card-header>
+
+        <mat-card-content>
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Email Address</mat-label>
+              <input matInput formControlName="email" type="email" placeholder="your@email.com">
+              <mat-icon matSuffix>email</mat-icon>
+              <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+              <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Password</mat-label>
+              <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" placeholder="••••••••">
+              <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+                <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+              </button>
+              <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+            </mat-form-field>
+
+            <div *ngIf="error" class="error-message">
+              <mat-icon>error_outline</mat-icon>
+              <span>{{ error }}</span>
+            </div>
+
+            <button mat-raised-button color="primary" type="submit" 
+                    [disabled]="isLoading || !loginForm.valid" 
+                    class="submit-button">
+              <mat-icon *ngIf="isLoading" class="spinner">hourglass_empty</mat-icon>
+              <span>{{ isLoading ? 'Logging in...' : 'Sign In' }}</span>
+            </button>
+          </form>
+
+          <div class="divider">
+            <span>Don't have an account?</span>
           </div>
-          <div class="form-group">
-            <label>Password:</label>
-            <input 
-              type="password" 
-              [(ngModel)]="password" 
-              name="password"
-              required
-              placeholder="••••••••"
-            />
-          </div>
-          <button type="submit" [disabled]="isLoading">
-            {{ isLoading ? 'Logging in...' : 'Login' }}
+
+          <button mat-stroked-button color="accent" routerLink="/register" class="full-width">
+            Create New Account
           </button>
-          <p class="error" *ngIf="error">{{ error }}</p>
-        </form>
-        <p class="signup-link">
-          Don't have an account? <a routerLink="/register">Sign up</a>
-        </p>
-      </div>
+        </mat-card-content>
+      </mat-card>
     </div>
   `,
   styles: [`
@@ -49,94 +78,143 @@ import { AuthService } from '@app/core/services/auth.service';
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
     }
-    .login-box {
-      background: white;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+
+    .login-card {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
     }
-    .login-box h1 {
+
+    .card-header {
       text-align: center;
-      margin-bottom: 2rem;
-      color: #333;
-    }
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: #666;
-    }
-    .form-group input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-    button {
-      width: 100%;
-      padding: 0.75rem;
-      background: #667eea;
+      padding: 32px 24px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      border: none;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .card-header h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .card-header p {
+      margin: 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    mat-card-content {
+      padding: 32px 24px;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .full-width {
+      width: 100%;
+    }
+
+    .error-message {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background-color: #ffebee;
+      color: #c62828;
       border-radius: 4px;
-      font-size: 1rem;
-      cursor: pointer;
+      font-size: 14px;
     }
-    button:hover {
-      background: #5568d3;
+
+    .error-message mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
-    button:disabled {
-      background: #999;
-      cursor: not-allowed;
+
+    .submit-button {
+      height: 48px;
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 12px;
     }
-    .error {
-      color: #d32f2f;
-      margin-top: 1rem;
+
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .divider {
       text-align: center;
+      margin: 24px 0;
+      color: #999;
+      font-size: 14px;
     }
-    .signup-link {
-      text-align: center;
-      margin-top: 1rem;
-    }
-    .signup-link a {
-      color: #667eea;
-      text-decoration: none;
+
+    @media (max-width: 480px) {
+      .login-card {
+        max-width: 100%;
+      }
+
+      .card-header h1 {
+        font-size: 24px;
+      }
+
+      mat-card-content {
+        padding: 24px 16px;
+      }
     }
   `]
 })
-export class LoginComponent {
-  email = '';
-  password = '';
+export class LoginComponent implements OnInit {
+  loginForm!: FormGroup;
   isLoading = false;
   error = '';
+  hidePassword = true;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private fb: FormBuilder
+  ) {}
+
+  ngOnInit() {
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
 
   onSubmit() {
-    if (!this.email || !this.password) {
-      this.error = 'Email and password are required';
-      return;
-    }
+    if (this.loginForm.invalid) return;
 
     this.isLoading = true;
     this.error = '';
 
-    this.auth.login(this.email, this.password).subscribe({
-      next: () => {
-        this.router.navigate(['/']);
+    const { email, password } = this.loginForm.value;
+    this.authService.login(email, password).subscribe({
+      next: (response) => {
+        localStorage.setItem('auth_token', response.token);
+        localStorage.setItem('user_id', response.user_id);
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
+        this.error = err.error?.error || 'Login failed. Please try again.';
         this.isLoading = false;
-        this.error = err.error?.error || 'Login failed';
-      },
+      }
     });
   }
 }

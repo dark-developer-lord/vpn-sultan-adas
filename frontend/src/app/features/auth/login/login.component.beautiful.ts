@@ -1,62 +1,57 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '@app/core/services/auth.service';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatAlertModule } from '@angular/material/alert';
 import { MatIconModule } from '@angular/material/icon';
+import { AuthService } from '@app/core/services/auth.service';
 
 @Component({
-  selector: 'app-register',
+  selector: 'app-login',
   standalone: true,
   imports: [
-    CommonModule,
+    CommonModule, 
+    FormsModule,
     ReactiveFormsModule,
     RouterLink,
-    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatCardModule,
+    MatProgressSpinnerModule,
+    MatAlertModule,
     MatIconModule
   ],
   template: `
-    <div class="register-container">
-      <mat-card class="register-card">
+    <div class="login-container">
+      <mat-card class="login-card">
         <mat-card-header class="card-header">
-          <h1>Create Account</h1>
-          <p>Join VPN Sultan Adas</p>
+          <h1>🔐 VPN Dashboard</h1>
+          <p>Secure Cloud VPN Management</p>
         </mat-card-header>
 
         <mat-card-content>
-          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Email Address</mat-label>
               <input matInput formControlName="email" type="email" placeholder="your@email.com">
               <mat-icon matSuffix>email</mat-icon>
-              <mat-error *ngIf="registerForm.get('email')?.hasError('required')">Email is required</mat-error>
-              <mat-error *ngIf="registerForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
+              <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+              <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Password</mat-label>
-              <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" placeholder="At least 6 characters">
+              <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" placeholder="••••••••">
               <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
                 <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
               </button>
-              <mat-error *ngIf="registerForm.get('password')?.hasError('required')">Password is required</mat-error>
-              <mat-error *ngIf="registerForm.get('password')?.hasError('minlength')">Password must be at least 6 characters</mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Confirm Password</mat-label>
-              <input matInput formControlName="confirmPassword" [type]="hideConfirm ? 'password' : 'text'" placeholder="Repeat password">
-              <button mat-icon-button matSuffix (click)="hideConfirm = !hideConfirm" type="button">
-                <mat-icon>{{hideConfirm ? 'visibility_off' : 'visibility'}}</mat-icon>
-              </button>
-              <mat-error *ngIf="registerForm.get('confirmPassword')?.hasError('required')">Please confirm password</mat-error>
+              <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
             </mat-form-field>
 
             <div *ngIf="error" class="error-message">
@@ -65,26 +60,26 @@ import { MatIconModule } from '@angular/material/icon';
             </div>
 
             <button mat-raised-button color="primary" type="submit" 
-                    [disabled]="isLoading || !registerForm.valid" 
+                    [disabled]="isLoading || !loginForm.valid" 
                     class="submit-button">
               <mat-icon *ngIf="isLoading" class="spinner">hourglass_empty</mat-icon>
-              <span>{{ isLoading ? 'Creating Account...' : 'Sign Up' }}</span>
+              <span>{{ isLoading ? 'Logging in...' : 'Login' }}</span>
             </button>
           </form>
 
           <div class="divider">
-            <span>Already have an account?</span>
+            <span>Don't have an account?</span>
           </div>
 
-          <button mat-stroked-button color="accent" routerLink="/login" class="full-width">
-            Sign In Instead
+          <button mat-stroked-button color="accent" routerLink="/register" class="full-width">
+            Create Account
           </button>
         </mat-card-content>
       </mat-card>
     </div>
   `,
   styles: [`
-    .register-container {
+    .login-container {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -93,7 +88,7 @@ import { MatIconModule } from '@angular/material/icon';
       padding: 20px;
     }
 
-    .register-card {
+    .login-card {
       width: 100%;
       max-width: 420px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -124,7 +119,7 @@ import { MatIconModule } from '@angular/material/icon';
       padding: 32px 24px;
     }
 
-    .register-form {
+    .login-form {
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -175,7 +170,7 @@ import { MatIconModule } from '@angular/material/icon';
     }
 
     @media (max-width: 480px) {
-      .register-card {
+      .login-card {
         max-width: 100%;
       }
 
@@ -189,52 +184,41 @@ import { MatIconModule } from '@angular/material/icon';
     }
   `]
 })
-export class RegisterComponent implements OnInit {
-  registerForm!: FormGroup;
+export class LoginComponent implements OnInit {
+  loginForm!: FormGroup;
   isLoading = false;
-  error: string | null = null;
+  error = '';
   hidePassword = true;
-  hideConfirm = true;
 
   constructor(
-    private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private fb: FormBuilder
   ) {}
 
   ngOnInit() {
-    this.registerForm = this.fb.group({
+    this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
-  onSubmit(): void {
-    if (!this.registerForm.valid) {
-      this.error = 'Please fill in all fields correctly';
-      return;
-    }
-
-    const { email, password, confirmPassword } = this.registerForm.value;
-
-    if (password !== confirmPassword) {
-      this.error = 'Passwords do not match';
-      return;
-    }
+  onSubmit() {
+    if (this.loginForm.invalid) return;
 
     this.isLoading = true;
-    this.error = null;
+    this.error = '';
 
-    this.authService.register(email, password).subscribe({
+    const { email, password } = this.loginForm.value;
+    this.authService.login(email, password).subscribe({
       next: (response) => {
         localStorage.setItem('auth_token', response.token);
         localStorage.setItem('user_id', response.user_id);
         this.router.navigate(['/dashboard']);
       },
-      error: (error) => {
+      error: (err) => {
+        this.error = err.error?.error || 'Login failed. Please try again.';
         this.isLoading = false;
-        this.error = error.error?.error || 'Registration failed. Please try again.';
       }
     });
   }
