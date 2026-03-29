@@ -64,7 +64,7 @@ services:
     depends_on:
       - api
     volumes:
-      - ./frontend/index.html:/usr/share/nginx/html/index.html:ro
+      - ./frontend/dist/vpn-dashboard/browser:/usr/share/nginx/html:ro
       - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
   prometheus:
