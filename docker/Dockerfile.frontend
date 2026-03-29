@@ -1,13 +1,10 @@
-# Simple frontend using single HTML file
+# Production Angular UI with Material Design
 FROM nginx:alpine
 
-# Create web root
-RUN mkdir -p /usr/share/nginx/html
+# Copy Angular build artifacts (all files from dist)
+COPY frontend/dist/vpn-dashboard/* /usr/share/nginx/html/
 
-# Copy simple HTML app
-COPY frontend/index.html /usr/share/nginx/html/index.html
-
-# Copy nginx config
+# Copy nginx config with SPA routing support
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port

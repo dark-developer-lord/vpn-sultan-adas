@@ -57,15 +57,14 @@ services:
       retries: 5
 
   frontend:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
     container_name: vpn-frontend
     ports:
       - "4200:80"
     depends_on:
       - api
-    volumes:
-      - ./frontend/dist/vpn-dashboard/browser:/usr/share/nginx/html:ro
-      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
   prometheus:
     image: prom/prometheus:latest
