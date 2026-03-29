@@ -1,8 +1,11 @@
-# Use pre-built Angular app
+# Simple frontend using single HTML file
 FROM nginx:alpine
 
-# Copy pre-built Angular app to nginx
-COPY frontend/dist/vpn-dashboard/browser /usr/share/nginx/html
+# Create web root
+RUN mkdir -p /usr/share/nginx/html
+
+# Copy simple HTML app
+COPY frontend/index.html /usr/share/nginx/html/index.html
 
 # Copy nginx config
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf

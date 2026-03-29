@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN Sultan Adas - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 1000px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab-button {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-button:hover {
+            color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        .peer-list {
+            list-style: none;
+        }
+        
+        .peer-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .peer-item h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        
+        .peer-item p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .node-list {
+            list-style: none;
+        }
+        
+        .node-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #764ba2;
+        }
+        
+        .node-item h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        
+        .node-item p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .status.online {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .button-small {
+            padding: 6px 12px;
+            font-size: 0.85em;
+            margin-right: 5px;
+        }
+        
+        .center {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 VPN Sultan Adas</h1>
+            <p>Secure VPN Connection Management</p>
+        </div>
+        
+        <div class="content">
+            <div id="authMessage" class="message"></div>
+            
+            <!-- Auth Tab -->
+            <div id="authTab" class="tab-content active">
+                <div class="form-group">
+                    <label>You are not logged in</label>
+                    <input type="email" id="loginEmail" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                </div>
+                <button class="button" onclick="login()">Login</button>
+                <button class="button" onclick="register()" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); margin-left: 10px;">Register</button>
+            </div>
+            
+            <!-- Main Dashboard (hidden until authenticated) -->
+            <div id="dashboard" style="display: none;">
+                <div class="tabs">
+                    <button class="tab-button active" onclick="showTab('peers')">My Peers (Clients)</button>
+                    <button class="tab-button" onclick="showTab('nodes')">VPN Nodes</button>
+                    <button class="tab-button" onclick="showTab('settings')">Settings</button>
+                </div>
+                
+                <!-- Peers Tab -->
+                <div id="peers" class="tab-content active">
+                    <h2>My VPN Clients</h2>
+                    <p style="color: #666; margin: 10px 0 20px 0;">Manage your VPN connection profiles</p>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                        <h3>Create New Client</h3>
+                        <div class="form-group">
+                            <label>Client Name</label>
+                            <input type="text" id="peerName" placeholder="e.g., My Laptop" required>
+                        </div>
+                        <div class="form-group">
+                            <label>VPN Node</label>
+                            <select id="nodeSelect">
+                                <option>Loading nodes...</option>
+                            </select>
+                        </div>
+                        <button class="button" onclick="createPeer()">Create Peer</button>
+                    </div>
+                    
+                    <h3>Your Clients</h3>
+                    <ul id="peerList" class="peer-list">
+                        <li class="center">Loading peers...</li>
+                    </ul>
+                </div>
+                
+                <!-- Nodes Tab -->
+                <div id="nodes" class="tab-content">
+                    <h2>Available VPN Nodes</h2>
+                    <p style="color: #666; margin: 10px 0 20px 0;">Connect to any of these VPN servers</p>
+                    <ul id="nodeList" class="node-list">
+                        <li class="center">Loading nodes...</li>
+                    </ul>
+                </div>
+                
+                <!-- Settings Tab -->
+                <div id="settings" class="tab-content">
+                    <h2>Settings</h2>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 5px;">
+                        <p style="margin-bottom: 10px;"><strong>API Health:</strong> <span id="apiHealth" style="color: #666;">Checking...</span></p>
+                        <p style="margin-bottom: 10px;"><strong>Logged in as:</strong> <span id="userEmail" style="color: #666; font-weight: 600;">-</span></p>
+                        <button class="button" onclick="logout()" style="background: #dc3545; margin-top: 20px;">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://' + window.location.hostname + ':3000';
+        let jwtToken = localStorage.getItem('jwtToken');
+        let currentUser = localStorage.getItem('currentUser');
+        
+        // Check if already logged in
+        window.addEventListener('load', function() {
+            if (jwtToken && currentUser) {
+                showDashboard();
+                loadPeers();
+                loadNodes();
+                checkApiHealth();
+            }
+        });
+        
+        async function register() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL + '/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    saveToken(data.token, email);
+                    showMessage('Registration successful! Logging in...', 'success');
+                    setTimeout(showDashboard, 1000);
+                } else {
+                    showMessage('Registration failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+        
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL + '/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    saveToken(data.token, email);
+                    showMessage('Login successful!', 'success');
+                    setTimeout(showDashboard, 500);
+                } else {
+                    showMessage('Invalid credentials', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+        
+        function saveToken(token, email) {
+            localStorage.setItem('jwtToken', token);
+            localStorage.setItem('currentUser', email);
+            jwtToken = token;
+            currentUser = email;
+        }
+        
+        function showDashboard() {
+            document.getElementById('authTab').parentElement.style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userEmail').textContent = currentUser;
+        }
+        
+        function logout() {
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('currentUser');
+            location.reload();
+        }
+        
+        async function loadPeers() {
+            try {
+                const response = await fetch(API_URL + '/peers', {
+                    headers: { 'Authorization': 'Bearer ' + jwtToken }
+                });
+                
+                if (response.ok) {
+                    const peers = await response.json();
+                    const html = peers.length > 0 
+                        ? peers.map(p => `
+                            <li class="peer-item">
+                                <h4>${p.name}</h4>
+                                <p>ID: <code>${p.id.substring(0, 8)}...</code></p>
+                                <p>Status: <span class="status online">Active</span></p>
+                                <button class="button button-small" onclick="downloadPeerConfig('${p.id}')">Download Config</button>
+                                <button class="button button-small" onclick="deletePeer('${p.id}')" style="background: #dc3545;">Delete</button>
+                            </li>
+                        `).join('')
+                        : '<li class="center">No peers created yet</li>';
+                    
+                    document.getElementById('peerList').innerHTML = html;
+                } else {
+                    document.getElementById('peerList').innerHTML = '<li class="center">Failed to load peers</li>';
+                }
+            } catch (error) {
+                document.getElementById('peerList').innerHTML = '<li class="center">Error loading peers</li>';
+            }
+        }
+        
+        async function loadNodes() {
+            try {
+                const response = await fetch(API_URL + '/nodes', {
+                    headers: { 'Authorization': 'Bearer ' + jwtToken }
+                });
+                
+                if (response.ok) {
+                    const nodes = await response.json();
+                    
+                    // Populate node select
+                    const selectHtml = nodes.map(n => `<option value="${n.id}">${n.address} (${n.region})</option>`).join('');
+                    document.getElementById('nodeSelect').innerHTML = selectHtml;
+                    
+                    // Populate node list
+                    const listHtml = nodes.map(n => `
+                        <li class="node-item">
+                            <h4>${n.address}</h4>
+                            <p>Region: <strong>${n.region}</strong></p>
+                            <p>Status: <span class="status online">Online</span></p>
+                        </li>
+                    `).join('');
+                    document.getElementById('nodeList').innerHTML = listHtml;
+                } else {
+                    document.getElementById('nodeList').innerHTML = '<li class="center">Failed to load nodes</li>';
+                }
+            } catch (error) {
+                document.getElementById('nodeList').innerHTML = '<li class="center">Error loading nodes</li>';
+            }
+        }
+        
+        async function createPeer() {
+            const name = document.getElementById('peerName').value;
+            const nodeId = document.getElementById('nodeSelect').value;
+            
+            if (!name) {
+                showMessage('Please enter a peer name', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL + '/peers', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + jwtToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ node_id: nodeId, name })
+                });
+                
+                if (response.ok) {
+                    showMessage('Peer created successfully!', 'success');
+                    document.getElementById('peerName').value = '';
+                    loadPeers();
+                } else {
+                    showMessage('Failed to create peer', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+        
+        async function downloadPeerConfig(peerId) {
+            try {
+                const response = await fetch(API_URL + `/peers/${peerId}/config`, {
+                    headers: { 'Authorization': 'Bearer ' + jwtToken }
+                });
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    const element = document.createElement('a');
+                    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+                    element.setAttribute('download', `vpn-${peerId.substring(0, 8)}.conf`);
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+                    element.click();
+                    document.body.removeChild(element);
+                }
+            } catch (error) {
+                showMessage('Error downloading config', 'error');
+            }
+        }
+        
+        async function deletePeer(peerId) {
+            if (!confirm('Are you sure you want to delete this peer?')) return;
+            
+            try {
+                const response = await fetch(API_URL + `/peers/${peerId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + jwtToken }
+                });
+                
+                if (response.ok) {
+                    showMessage('Peer deleted successfully', 'success');
+                    loadPeers();
+                }
+            } catch (error) {
+                showMessage('Error deleting peer', 'error');
+            }
+        }
+        
+        async function checkApiHealth() {
+            try {
+                const response = await fetch(API_URL + '/health');
+                if (response.ok) {
+                    document.getElementById('apiHealth').innerHTML = '<span style="color: #28a745;">✓ Connected</span>';
+                }
+            } catch (error) {
+                document.getElementById('apiHealth').innerHTML = '<span style="color: #dc3545;">✗ Disconnected</span>';
+            }
+        }
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabName === 'nodes') {
+                loadNodes();
+            }
+        }
+        
+        function showMessage(text, type) {
+            const msg = document.getElementById('authMessage');
+            msg.textContent = text;
+            msg.className = 'message ' + type;
+            setTimeout(() => {
+                msg.className = 'message';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

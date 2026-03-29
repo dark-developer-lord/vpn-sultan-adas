@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN Sultan Adas - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        .auth-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-container {
+            display: none;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .toggle-form {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        
+        .toggle-form button {
+            background: none;
+            color: #667eea;
+            padding: 0;
+            width: auto;
+            cursor: pointer;
+            text-decoration: underline;
+            transform: none;
+        }
+        
+        .toggle-form button:hover {
+            transform: none;
+            opacity: 0.8;
+        }
+        
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .success {
+            color: #27ae60;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .dashboard-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dashboard-header h2 {
+            color: #333;
+        }
+        
+        .logout-btn {
+            background: #e74c3c;
+            padding: 8px 16px;
+            width: auto;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .form-group small {
+            color: #999;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .peers-list {
+            grid-column: 1 / -1;
+        }
+        
+        .peer-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .peer-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .peer-info small {
+            color: #999;
+        }
+        
+        .peer-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            width: auto;
+            background: #667eea;
+        }
+        
+        .btn-small.danger {
+            background: #e74c3c;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            margin-top: 10px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .auth-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Section -->
+    <div class="auth-container" id="authContainer">
+        <div class="header">
+            <h1>🔐 VPN Sultan Adas</h1>
+            <p>Secure VPN Management Platform</p>
+        </div>
+        
+        <!-- Login Form -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="loginEmail" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••" required>
+            </div>
+            <button type="submit">Login</button>
+            <div id="loginError" class="error"></div>
+            <div id="loginLoading" class="loading"><div class="spinner"></div></div>
+        </form>
+        
+        <div class="toggle-form">
+            Don't have an account?
+            <button type="button" onclick="toggleForms()">Register</button>
+        </div>
+        
+        <!-- Register Form -->
+        <form id="registerForm" style="display: none;">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="registerEmail" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="registerPassword" placeholder="••••••" required>
+                <small>At least 6 characters</small>
+            </div>
+            <button type="submit">Register</button>
+            <div id="registerError" class="error"></div>
+            <div id="registerSuccess" class="success"></div>
+            <div id="registerLoading" class="loading"><div class="spinner"></div></div>
+        </form>
+        
+        <div class="toggle-form">
+            Already have an account?
+            <button type="button" onclick="toggleForms()">Login</button>
+        </div>
+    </div>
+    
+    <!-- Dashboard Section -->
+    <div class="container dashboard-container" id="dashboardContainer">
+        <div class="dashboard-header">
+            <h2>VPN Dashboard</h2>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="content">
+            <!-- Create Peer -->
+            <div class="card">
+                <h3>Create VPN Peer</h3>
+                <form id="createPeerForm">
+                    <div class="form-group">
+                        <label>Peer Name</label>
+                        <input type="text" id="peerName" placeholder="my-laptop" required>
+                        <small>e.g., my-laptop, phone, work-pc</small>
+                    </div>
+                    <div class="form-group">
+                        <label>VPN Node</label>
+                        <select id="nodeId" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                            <option value="">Select a node...</option>
+                        </select>
+                    </div>
+                    <button type="submit">Create Peer</button>
+                    <div id="createPeerError" class="error"></div>
+                    <div id="createPeerSuccess" class="success"></div>
+                    <div id="createPeerLoading" class="loading"><div class="spinner"></div></div>
+                </form>
+            </div>
+            
+            <!-- Stats -->
+            <div class="card">
+                <h3>Quick Stats</h3>
+                <div style="margin-bottom: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #667eea;">Total Peers:</strong>
+                        <div style="font-size: 24px; color: #333;" id="totalPeers">0</div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #667eea;">Available Nodes:</strong>
+                        <div style="font-size: 24px; color: #333;" id="totalNodes">0</div>
+                    </div>
+                    <button onclick="loadData()" style="margin-top: 10px;">Refresh</button>
+                </div>
+            </div>
+            
+            <!-- My Peers -->
+            <div class="card peers-list">
+                <h3>My VPN Peers</h3>
+                <div id="peersList" style="max-height: 400px; overflow-y: auto;">
+                    <p style="color: #999;">No peers yet. Create one above!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://187.124.179.20:3000';
+        let token = localStorage.getItem('vpn_token');
+        let userId = localStorage.getItem('vpn_user_id');
+        
+        // Initialize
+        if (token && userId) {
+            showDashboard();
+            loadData();
+        } else {
+            showAuth();
+        }
+        
+        function toggleForms() {
+            document.getElementById('loginForm').style.display = 
+                document.getElementById('loginForm').style.display === 'none' ? 'block' : 'none';
+            document.getElementById('registerForm').style.display = 
+                document.getElementById('registerForm').style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function showAuth() {
+            document.getElementById('authContainer').style.display = 'block';
+            document.getElementById('dashboardContainer').style.display = 'none';
+        }
+        
+        function showDashboard() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('dashboardContainer').style.display = 'block';
+        }
+        
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            const loadingDiv = document.getElementById('loginLoading');
+            
+            errorDiv.textContent = '';
+            loadingDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    token = data.token;
+                    userId = data.user_id;
+                    localStorage.setItem('vpn_token', token);
+                    localStorage.setItem('vpn_user_id', userId);
+                    showDashboard();
+                    loadData();
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error: ' + error.message;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        });
+        
+        // Register
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const errorDiv = document.getElementById('registerError');
+            const successDiv = document.getElementById('registerSuccess');
+            const loadingDiv = document.getElementById('registerLoading');
+            
+            errorDiv.textContent = '';
+            successDiv.textContent = '';
+            loadingDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    successDiv.textContent = 'Registration successful! You can now login.';
+                    document.getElementById('registerForm').reset();
+                    setTimeout(() => toggleForms(), 1000);
+                } else {
+                    errorDiv.textContent = data.error || 'Registration failed';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error: ' + error.message;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        });
+        
+        async function loadData() {
+            try {
+                // Load nodes
+                const nodesResponse = await fetch(`${API_URL}/nodes`);
+                const nodes = await nodesResponse.json();
+                document.getElementById('totalNodes').textContent = nodes.length;
+                
+                const nodeSelect = document.getElementById('nodeId');
+                nodeSelect.innerHTML = '<option value="">Select a node...</option>';
+                nodes.forEach(node => {
+                    const option = document.createElement('option');
+                    option.value = node.id;
+                    option.textContent = `${node.name} (${node.region})`;
+                    nodeSelect.appendChild(option);
+                });
+                
+                // Load peers
+                if (token) {
+                    const peersResponse = await fetch(`${API_URL}/peers`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const peers = await peersResponse.json();
+                    document.getElementById('totalPeers').textContent = peers.length;
+                    
+                    const peersList = document.getElementById('peersList');
+                    if (peers.length === 0) {
+                        peersList.innerHTML = '<p style="color: #999;">No peers yet. Create one above!</p>';
+                    } else {
+                        peersList.innerHTML = peers.map(peer => `
+                            <div class="peer-item">
+                                <div class="peer-info">
+                                    <h4>${peer.name}</h4>
+                                    <small>Created: ${new Date(peer.created_at).toLocaleDateString()}</small>
+                                </div>
+                                <div class="peer-actions">
+                                    <button class="btn-small" onclick="downloadConfig('${peer.id}')">Download</button>
+                                    <button class="btn-small danger" onclick="deletePeer('${peer.id}')">Delete</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+        
+        // Create Peer
+        document.getElementById('createPeerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('peerName').value;
+            const nodeId = document.getElementById('nodeId').value;
+            const errorDiv = document.getElementById('createPeerError');
+            const successDiv = document.getElementById('createPeerSuccess');
+            const loadingDiv = document.getElementById('createPeerLoading');
+            
+            if (!nodeId) {
+                errorDiv.textContent = 'Please select a node';
+                return;
+            }
+            
+            errorDiv.textContent = '';
+            successDiv.textContent = '';
+            loadingDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch(`${API_URL}/peers`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ node_id: nodeId, name })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    successDiv.textContent = 'Peer created successfully!';
+                    document.getElementById('createPeerForm').reset();
+                    loadData();
+                    setTimeout(() => successDiv.textContent = '', 3000);
+                } else {
+                    errorDiv.textContent = data.error || 'Failed to create peer';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error: ' + error.message;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        });
+        
+        async function downloadConfig(peerId) {
+            try {
+                const response = await fetch(`${API_URL}/peers/${peerId}/config`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `vpn-${peerId}.conf`;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    alert('Failed to download config');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function deletePeer(peerId) {
+            if (!confirm('Are you sure you want to delete this peer?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/peers/${peerId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    loadData();
+                } else {
+                    alert('Failed to delete peer');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('vpn_token');
+            localStorage.removeItem('vpn_user_id');
+            token = null;
+            userId = null;
+            showAuth();
+            document.getElementById('loginForm').reset();
+            document.getElementById('registerForm').reset();
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
