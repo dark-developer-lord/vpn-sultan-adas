@@ -120,11 +120,11 @@ interface User {
         </div>
         <div class="stat-card">
           <h4>Active Users</h4>
-          <p>{{ users.filter(u => u.status === 'active').length }}</p>
+          <p>{{ getActiveUsersCount() }}</p>
         </div>
         <div class="stat-card">
           <h4>Admin Users</h4>
-          <p>{{ users.filter(u => u.role === 'admin').length }}</p>
+          <p>{{ getAdminUsersCount() }}</p>
         </div>
       </div>
     </div>
@@ -314,5 +314,13 @@ export class UserManagementComponent implements OnInit {
   toggleUserStatus(user: User) {
     user.status = user.status === 'active' ? 'inactive' : 'active';
     this.snackBar.open(`User ${user.status}`, 'Close', { duration: 3000 });
+  }
+
+  getActiveUsersCount(): number {
+    return this.users.filter(u => u.status === 'active').length;
+  }
+
+  getAdminUsersCount(): number {
+    return this.users.filter(u => u.role === 'admin').length;
   }
 }

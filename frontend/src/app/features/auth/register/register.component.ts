@@ -1,57 +1,89 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '@app/core/services/auth.service';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule
+  ],
   template: `
     <div class="register-container">
-      <div class="register-box">
-        <h1>Create Account</h1>
-        <form (ngSubmit)="onSubmit()">
-          <div class="form-group">
-            <label>Email:</label>
-            <input 
-              type="email" 
-              [(ngModel)]="email" 
-              name="email"
-              required
-              placeholder="user@example.com"
-            />
-          </div>
-          <div class="form-group">
-            <label>Password:</label>
-            <input 
-              type="password" 
-              [(ngModel)]="password" 
-              name="password"
-              required
-              placeholder="••••••••"
-            />
-          </div>
-          <div class="form-group">
-            <label>Confirm Password:</label>
-            <input 
-              type="password" 
-              [(ngModel)]="confirmPassword" 
-              name="confirmPassword"
-              required
-              placeholder="••••••••"
-            />
-          </div>
-          <button type="submit" [disabled]="isLoading">
-            {{ isLoading ? 'Creating account...' : 'Sign Up' }}
-          </button>
-          <p class="error" *ngIf="error">{{ error }}</p>
-        </form>
-        <p class="login-link">
-          Already have an account? <a routerLink="/login">Log in</a>
-        </p>
-      </div>
+      <mat-card class="register-card">
+        <mat-card-header>
+          <mat-card-title>Create Account</mat-card-title>
+          <mat-card-subtitle>Join VPN Sultan Adas</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Email</mat-label>
+              <input matInput 
+                     formControlName="email" 
+                     type="email" 
+                     placeholder="your@email.com">
+              <mat-error *ngIf="email.hasError('required')">Email is required</mat-error>
+              <mat-error *ngIf="email.hasError('email')">Please enter a valid email</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Password</mat-label>
+              <input matInput 
+                     formControlName="password" 
+                     type="password"
+                     placeholder="At least 6 characters">
+              <mat-error *ngIf="password.hasError('required')">Password is required</mat-error>
+              <mat-error *ngIf="password.hasError('minlength')">Password must be at least 6 characters</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Confirm Password</mat-label>
+              <input matInput 
+                     formControlName="confirmPassword" 
+                     type="password"
+                     placeholder="Repeat password">
+              <mat-error *ngIf="confirmPassword.hasError('required')">Please confirm password</mat-error>
+            </mat-form-field>
+
+            <div *ngIf="error" class="error-message">
+              {{ error }}
+            </div>
+
+            <button mat-raised-button 
+                    color="primary" 
+                    type="submit"
+                    [disabled]="!registerForm.valid || isLoading"
+                    class="full-width">
+              <mat-spinner *ngIf="isLoading" diameter="20" class="spinner"></mat-spinner>
+              {{ isLoading ? 'Creating account...' : 'Sign Up' }}
+            </button>
+          </form>
+        </mat-card-content>
+
+        <mat-card-footer>
+          <p>Already have an account? 
+            <a routerLink="/login" class="link">Log in here</a>
+          </p>
+        </mat-card-footer>
+      </mat-card>
     </div>
   `,
   styles: [`
@@ -59,105 +91,136 @@ import { AuthService } from '@app/core/services/auth.service';
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
     }
-    .register-box {
-      background: white;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+
+    .register-card {
       width: 100%;
-      max-width: 400px;
+      max-width: 450px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     }
-    .register-box h1 {
+
+    mat-card-header {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 30px;
+    }
+
+    mat-card-title {
+      font-size: 28px;
       color: #333;
     }
-    .form-group {
-      margin-bottom: 1rem;
+
+    mat-card-subtitle {
+      color: #999;
+      margin-top: 10px;
     }
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: #666;
-    }
-    .form-group input {
+
+    mat-form-field {
       width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1rem;
+      margin-bottom: 20px;
     }
+
+    .full-width {
+      width: 100%;
+    }
+
     button {
-      width: 100%;
-      padding: 0.75rem;
-      background: #667eea;
-      color: white;
-      border: none;
+      margin-top: 10px;
+    }
+
+    .error-message {
+      color: #f44336;
+      padding: 12px;
+      background-color: #ffebee;
       border-radius: 4px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #5568d3;
-    }
-    button:disabled {
-      background: #999;
-      cursor: not-allowed;
-    }
-    .error {
-      color: #d32f2f;
-      margin-top: 1rem;
+      margin-bottom: 20px;
       text-align: center;
     }
-    .login-link {
+
+    mat-card-footer {
       text-align: center;
-      margin-top: 1rem;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      margin-top: 20px;
     }
-    .login-link a {
+
+    .link {
       color: #667eea;
       text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .spinner {
+      display: inline-block;
+      margin-right: 10px;
     }
   `]
 })
 export class RegisterComponent {
-  email = '';
-  password = '';
-  confirmPassword = '';
+  registerForm: FormGroup;
   isLoading = false;
-  error = '';
+  error: string | null = null;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private fb: FormBuilder,
+    private auth: AuthService,
+    private router: Router,
+    private snackBar: MatSnackBar
+  ) {
+    this.registerForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]]
+    });
+  }
 
-  onSubmit() {
-    if (!this.email || !this.password || !this.confirmPassword) {
-      this.error = 'All fields are required';
+  get email() {
+    return this.registerForm.get('email')!;
+  }
+
+  get password() {
+    return this.registerForm.get('password')!;
+  }
+
+  get confirmPassword() {
+    return this.registerForm.get('confirmPassword')!;
+  }
+
+  onSubmit(): void {
+    if (!this.registerForm.valid) {
+      this.error = 'Please fill in all fields correctly';
       return;
     }
 
-    if (this.password !== this.confirmPassword) {
+    const { email, password, confirmPassword } = this.registerForm.value;
+
+    if (password !== confirmPassword) {
       this.error = 'Passwords do not match';
       return;
     }
 
-    if (this.password.length < 6) {
-      this.error = 'Password must be at least 6 characters';
-      return;
-    }
-
     this.isLoading = true;
-    this.error = '';
+    this.error = null;
 
-    this.auth.register(this.email, this.password).subscribe({
-      next: () => {
-        this.router.navigate(['/']);
+    this.auth.register(email, password).subscribe({
+      next: (response) => {
+        this.snackBar.open('Registration successful! Redirecting...', 'Close', { duration: 3000 });
+        setTimeout(() => {
+          this.router.navigate(['/dashboard']);
+        }, 1000);
       },
-      error: (err) => {
+      error: (error) => {
         this.isLoading = false;
-        this.error = err.error?.error || 'Registration failed';
-      },
+        this.error = error.message || 'Registration failed. Please try again.';
+        console.error('Registration error:', error);
+      }
     });
   }
 }

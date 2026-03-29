@@ -19,8 +19,12 @@ export class AuthService {
   register(email: string, password: string): Observable<any> {
     return this.api.register(email, password).pipe(
       tap((response) => {
-        this.storeToken(response.data.token);
-        this.isAuthenticatedSubject.next(true);
+        // API returns token directly in response
+        const token = response.token || response.data?.token;
+        if (token) {
+          this.storeToken(token);
+          this.isAuthenticatedSubject.next(true);
+        }
       })
     );
   }
@@ -28,8 +32,12 @@ export class AuthService {
   login(email: string, password: string): Observable<any> {
     return this.api.login(email, password).pipe(
       tap((response) => {
-        this.storeToken(response.data.token);
-        this.isAuthenticatedSubject.next(true);
+        // API returns token directly in response
+        const token = response.token || response.data?.token;
+        if (token) {
+          this.storeToken(token);
+          this.isAuthenticatedSubject.next(true);
+        }
       })
     );
   }

@@ -7,19 +7,33 @@ import { catchError } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = 'http://localhost:3000';
+  private baseUrl = this.getBaseUrl();
 
   constructor(private http: HttpClient) {}
 
+  private getBaseUrl(): string {
+    // Use production URL on VPS, localhost for development
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://localhost:3000';
+      }
+      return `http://${hostname}:3000`;
+    }
+    return 'http://localhost:3000';
+  }
+
   // Auth endpoints
   register(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/register`, { email, password })
-      .pipe(catchError(this.handleError));
+    return this.http.post<any>(`${this.baseUrl}/auth/register`, { email, password }, {
+      headers: { 'Content-Type': 'application/json' }
+    }).pipe(catchError(this.handleError));
   }
 
   login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/login`, { email, password })
-      .pipe(catchError(this.handleError));
+    return this.http.post<any>(`${this.baseUrl}/auth/login`, { email, password }, {
+      headers: { 'Content-Type': 'application/json' }
+    }).pipe(catchError(this.handleError));
   }
 
   // Removed logout - not implemented in backend yet
@@ -30,7 +44,7 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
-  // Peers
+  // Peers (token added automatically by interceptor)
   getPeers(): Observable<any> {
     return this.http.get(`${this.baseUrl}/peers`)
       .pipe(catchError(this.handleError));
